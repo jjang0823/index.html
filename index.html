@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a2b4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="일정관리">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<title>일정관리 - 장영민 차장</title>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Nanum Gothic', sans-serif;
+  background: #f0f2f5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 헤더 */
+.header {
+  background: #1a2b4a;
+  color: #fff;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.header-left { display:flex; align-items:center; gap:10px; }
+.header-title { font-size:16px; font-weight:800; letter-spacing:0.5px; }
+.header-sub { font-size:11px; color:rgba(255,255,255,0.6); margin-top:1px; }
+.header-nav { display:flex; align-items:center; gap:8px; }
+.nav-btn {
+  background: rgba(255,255,255,0.15);
+  border: none; color:#fff;
+  width:32px; height:32px;
+  border-radius:8px;
+  cursor:pointer; font-size:16px;
+  display:flex; align-items:center; justify-content:center;
+  transition:background 0.2s;
+}
+.nav-btn:hover { background:rgba(255,255,255,0.28); }
+.month-label { font-size:15px; font-weight:800; min-width:90px; text-align:center; }
+.today-btn {
+  background: rgba(255,255,255,0.15);
+  border: none; color:#fff;
+  padding: 5px 12px;
+  border-radius:8px;
+  cursor:pointer; font-size:12px; font-weight:700;
+  font-family:'Nanum Gothic',sans-serif;
+  transition:background 0.2s;
+}
+.today-btn:hover { background:rgba(255,255,255,0.28); }
+
+/* 메인 레이아웃 */
+.main {
+  display: flex;
+  flex: 1;
+  gap: 0;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 16px;
+  gap: 16px;
+}
+
+/* 캘린더 섹션 */
+.calendar-section {
+  flex: 1;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  overflow: hidden;
+}
+
+/* 범례 */
+.legend-bar {
+  display:flex; gap:14px; padding:10px 16px;
+  border-bottom:1px solid #eee;
+  flex-wrap:wrap;
+}
+.legend-item { display:flex; align-items:center; gap:5px; font-size:11px; color:#555; }
+.legend-dot { width:10px; height:10px; border-radius:50%; }
+
+/* 요일 헤더 */
+.weekdays {
+  display:grid; grid-template-columns:repeat(7,1fr);
+  background:#f8f9fb; border-bottom:1px solid #eee;
+}
+.weekday {
+  text-align:center; padding:8px 0;
+  font-size:11px; font-weight:700; color:#888;
+}
+.weekday.sun { color:#e74c3c; }
+.weekday.sat { color:#3498db; }
+
+/* 캘린더 그리드 */
+.calendar-grid {
+  display:grid; grid-template-columns:repeat(7,1fr);
+  border-left:1px solid #eee; border-top:1px solid #eee;
+}
+.day-cell {
+  min-height:90px; border-right:1px solid #eee; border-bottom:1px solid #eee;
+  padding:5px; cursor:pointer; transition:background 0.15s; position:relative;
+}
+.day-cell:hover { background:#f5f8ff; }
+.day-cell.today { background:#fffbe6; }
+.day-cell.selected { background:#e8f0fe; }
+.day-cell.other-month .day-num { color:#ccc; }
+.day-cell.other-month { background:#fafafa; }
+
+.day-num {
+  font-size:13px; font-weight:700; color:#333;
+  width:26px; height:26px;
+  display:flex; align-items:center; justify-content:center;
+  border-radius:50%; margin-bottom:2px;
+}
+.day-cell.today .day-num { background:#1a2b4a; color:#fff; }
+.day-cell.sun .day-num { color:#e74c3c; }
+.day-cell.sat .day-num { color:#3498db; }
+.day-cell.today.sun .day-num,
+.day-cell.today.sat .day-num { color:#fff; }
+
+.holiday-name { font-size:8px; color:#e74c3c; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+.event-tag {
+  font-size:9px; border-radius:3px; padding:1px 5px;
+  margin-bottom:2px; white-space:nowrap; overflow:hidden;
+  text-overflow:ellipsis; color:#fff; cursor:pointer;
+}
+.cat-quality { background:#3498db; }
+.cat-radiation { background:#e67e22; }
+.cat-purchase { background:#27ae60; }
+.cat-personal { background:#9b59b6; }
+.cat-other { background:#7f8c8d; }
+
+/* 사이드 패널 */
+.side-panel {
+  width: 300px;
+  display:flex; flex-direction:column; gap:12px;
+}
+
+.panel-card {
+  background:#fff; border-radius:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.07);
+  overflow:hidden;
+}
+.panel-header {
+  background:#1a2b4a; color:#fff;
+  padding:10px 14px; font-size:13px; font-weight:800;
+}
+.panel-body { padding:14px; }
+
+/* 선택 날짜 */
+.selected-date-label {
+  font-size:13px; font-weight:800; color:#1a2b4a;
+  margin-bottom:10px; padding-bottom:8px;
+  border-bottom:2px solid #e8f0fe;
+}
+
+/* 일정 목록 */
+.event-list { max-height:150px; overflow-y:auto; margin-bottom:10px; }
+.event-item {
+  display:flex; align-items:center; gap:7px;
+  padding:6px 8px; border-radius:6px; margin-bottom:4px;
+  background:#f8f9fb; border:1px solid #eee; font-size:12px;
+  transition:background 0.15s;
+}
+.event-item:hover { background:#f0f4ff; }
+.event-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.event-item-text { flex:1; color:#333; }
+.event-item-memo { font-size:10px; color:#999; }
+.event-del-btn {
+  background:none; border:none; color:#ccc;
+  cursor:pointer; font-size:14px; padding:0 2px; line-height:1;
+}
+.event-del-btn:hover { color:#e74c3c; }
+.no-events { font-size:12px; color:#aaa; padding:6px 0; text-align:center; }
+
+/* 추가 폼 */
+.add-form { display:flex; flex-direction:column; gap:7px; }
+.add-form input[type="text"],
+.add-form select,
+.add-form textarea {
+  width:100%; border:1px solid #ddd; border-radius:7px;
+  padding:8px 10px; font-family:'Nanum Gothic',sans-serif;
+  font-size:12px; outline:none; transition:border 0.2s;
+}
+.add-form input:focus, .add-form select:focus, .add-form textarea:focus { border-color:#1a2b4a; }
+.add-form textarea { resize:none; }
+.add-row { display:flex; gap:7px; }
+.add-row select { flex:1; }
+.add-btn {
+  background:#1a2b4a; color:#fff; border:none;
+  border-radius:7px; padding:8px; width:100%;
+  font-family:'Nanum Gothic',sans-serif; font-size:12px; font-weight:700;
+  cursor:pointer; transition:background 0.2s;
+}
+.add-btn:hover { background:#2c3e6b; }
+
+/* Google Calendar 연동 */
+.gcal-section { margin-top:4px; }
+.gcal-url-input {
+  width:100%; border:1px solid #ddd; border-radius:7px;
+  padding:7px 10px; font-size:11px; font-family:'Nanum Gothic',sans-serif;
+  outline:none; margin-bottom:7px;
+}
+.gcal-url-input:focus { border-color:#1a2b4a; }
+.gcal-connect-btn {
+  background:#34a853; color:#fff; border:none;
+  border-radius:7px; padding:7px; width:100%;
+  font-family:'Nanum Gothic',sans-serif; font-size:12px; font-weight:700;
+  cursor:pointer; transition:background 0.2s; margin-bottom:7px;
+}
+.gcal-connect-btn:hover { background:#2d9249; }
+.gcal-iframe-wrap { border-radius:8px; overflow:hidden; border:1px solid #eee; }
+.gcal-iframe-wrap iframe { display:block; width:100%; height:250px; border:none; }
+.gcal-placeholder {
+  height:200px; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:8px;
+  color:#bbb; font-size:12px; background:#f8f9fb; border-radius:8px;
+}
+.gcal-link-btn {
+  display:block; text-align:center;
+  background:#fff; border:1px solid #ddd; border-radius:7px;
+  padding:8px; font-size:11px; color:#555; text-decoration:none;
+  transition:background 0.2s; cursor:pointer; margin-top:6px;
+}
+.gcal-link-btn:hover { background:#f0f0f0; }
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .main { flex-direction:column; padding:10px; }
+  .side-panel { width:100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<div class="header">
+  <div class="header-left">
+    <div>
+      <div class="header-title">📅 일정관리 시스템</div>
+      <div class="header-sub">이구산업 품질관리팀</div>
+    </div>
+  </div>
+  <div class="header-nav">
+    <button class="today-btn" onclick="goToday()">오늘</button>
+    <button class="nav-btn" onclick="changeMonth(-1)">&#8249;</button>
+    <span class="month-label" id="monthLabel"></span>
+    <button class="nav-btn" onclick="changeMonth(1)">&#8250;</button>
+  </div>
+</div>
+
+<!-- 메인 -->
+<div class="main">
+  <!-- 캘린더 -->
+  <div class="calendar-section">
+    <div class="legend-bar">
+      <div class="legend-item"><div class="legend-dot" style="background:#3498db"></div>품질</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#e67e22"></div>방사선</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#27ae60"></div>구매</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#9b59b6"></div>개인</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#7f8c8d"></div>기타</div>
+    </div>
+    <div class="weekdays">
+      <div class="weekday sun">일</div>
+      <div class="weekday">월</div>
+      <div class="weekday">화</div>
+      <div class="weekday">수</div>
+      <div class="weekday">목</div>
+      <div class="weekday">금</div>
+      <div class="weekday sat">토</div>
+    </div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+  </div>
+
+  <!-- 사이드 패널 -->
+  <div class="side-panel">
+
+    <!-- 일정 추가 -->
+    <div class="panel-card">
+      <div class="panel-header">📝 일정 관리</div>
+      <div class="panel-body">
+        <div class="selected-date-label" id="selectedDateLabel">날짜를 클릭하세요</div>
+        <div class="event-list" id="eventList">
+          <div class="no-events">날짜를 선택해주세요</div>
+        </div>
+        <div class="add-form">
+          <input type="text" id="eventInput" placeholder="일정 제목 입력..." onkeydown="if(event.key==='Enter') addEvent()">
+          <div class="add-row">
+            <select id="catSelect">
+              <option value="quality">🔵 품질</option>
+              <option value="radiation">🟠 방사선</option>
+              <option value="purchase">🟢 구매</option>
+              <option value="personal">🟣 개인</option>
+              <option value="other">⚫ 기타</option>
+            </select>
+          </div>
+          <input type="text" id="memoInput" placeholder="메모 (선택사항)">
+          <button class="add-btn" onclick="addEvent()">+ 일정 추가</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Google Calendar 연동 -->
+    <div class="panel-card">
+      <div class="panel-header">📆 Google Calendar</div>
+      <div class="panel-body">
+        <div class="gcal-section">
+          <input class="gcal-url-input" id="gcalUrl" placeholder="Google Calendar embed URL 입력..." value="">
+          <button class="gcal-connect-btn" onclick="connectGcal()">연동하기</button>
+          <div id="gcalContainer">
+            <div class="gcal-placeholder">
+              <span style="font-size:32px">📅</span>
+              <span>위 안내에 따라 URL을 입력해주세요</span>
+            </div>
+          </div>
+          <a class="gcal-link-btn" href="https://calendar.google.com" target="_blank">
+            🔗 Google Calendar 바로가기
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// 공휴일
+const HOLIDAYS = {
+  '2026-01-01':'신정','2026-01-28':'설날','2026-01-29':'설날','2026-01-30':'설날',
+  '2026-03-01':'삼일절','2026-05-05':'어린이날','2026-06-06':'현충일',
+  '2026-08-15':'광복절','2026-09-24':'추석','2026-09-25':'추석','2026-09-26':'추석',
+  '2026-10-03':'개천절','2026-10-09':'한글날','2026-12-25':'크리스마스',
+  '2025-01-01':'신정','2025-01-28':'설날','2025-01-29':'설날','2025-01-30':'설날',
+  '2025-03-01':'삼일절','2025-05-05':'어린이날','2025-06-06':'현충일',
+  '2025-08-15':'광복절','2025-10-03':'개천절','2025-10-05':'추석',
+  '2025-10-06':'추석','2025-10-07':'추석','2025-10-09':'한글날','2025-12-25':'크리스마스',
+};
+
+const CAT_COLOR = { quality:'#3498db', radiation:'#e67e22', purchase:'#27ae60', personal:'#9b59b6', other:'#7f8c8d' };
+const CAT_CLASS = { quality:'cat-quality', radiation:'cat-radiation', purchase:'cat-purchase', personal:'cat-personal', other:'cat-other' };
+const CAT_NAME  = { quality:'품질', radiation:'방사선', purchase:'구매', personal:'개인', other:'기타' };
+
+let currentYear, currentMonth, selectedDate;
+let events = {};
+
+function loadData() {
+  try {
+    const e = localStorage.getItem('jym_cal_events');
+    if (e) events = JSON.parse(e);
+    const url = localStorage.getItem('jym_gcal_url');
+    if (url) { document.getElementById('gcalUrl').value = url; connectGcal(true); }
+  } catch(e) { events = {}; }
+}
+function saveData() {
+  try { localStorage.setItem('jym_cal_events', JSON.stringify(events)); } catch(e){}
+}
+
+function pad(n){ return String(n).padStart(2,'0'); }
+function dateKey(y,m,d){ return `${y}-${pad(m)}-${pad(d)}`; }
+
+function init() {
+  loadData();
+  const now = new Date();
+  currentYear = now.getFullYear();
+  currentMonth = now.getMonth()+1;
+  selectedDate = dateKey(now.getFullYear(), now.getMonth()+1, now.getDate());
+  render();
+  renderEventList();
+  document.getElementById('selectedDateLabel').textContent = formatLabel(selectedDate);
+}
+
+function goToday() {
+  const now = new Date();
+  currentYear = now.getFullYear();
+  currentMonth = now.getMonth()+1;
+  selectedDate = dateKey(now.getFullYear(), now.getMonth()+1, now.getDate());
+  render(); renderEventList();
+  document.getElementById('selectedDateLabel').textContent = formatLabel(selectedDate);
+}
+
+function changeMonth(d) {
+  currentMonth += d;
+  if (currentMonth>12){currentMonth=1;currentYear++;}
+  if (currentMonth<1){currentMonth=12;currentYear--;}
+  render();
+}
+
+function render() {
+  document.getElementById('monthLabel').textContent = `${currentYear}년 ${currentMonth}월`;
+  const grid = document.getElementById('calendarGrid');
+  grid.innerHTML = '';
+  const firstDay = new Date(currentYear, currentMonth-1, 1).getDay();
+  const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+  const daysInPrev = new Date(currentYear, currentMonth-1, 0).getDate();
+  const now = new Date();
+  const todayKey = dateKey(now.getFullYear(), now.getMonth()+1, now.getDate());
+
+  let cells = [];
+  for (let i=firstDay-1;i>=0;i--) cells.push({day:daysInPrev-i,m:currentMonth-1,y:currentYear,other:true});
+  for (let d=1;d<=daysInMonth;d++) cells.push({day:d,m:currentMonth,y:currentYear,other:false});
+  const rem = 42 - cells.length;
+  for (let d=1;d<=rem;d++) cells.push({day:d,m:currentMonth+1,y:currentYear,other:true});
+
+  cells.forEach((c,idx) => {
+    let y=c.y, m=c.m;
+    if(m>12){m=1;y++;} if(m<1){m=12;y--;}
+    const key = dateKey(y,m,c.day);
+    const dow = idx%7;
+
+    const cell = document.createElement('div');
+    cell.className = 'day-cell'
+      +(c.other?' other-month':'')
+      +(key===todayKey?' today':'')
+      +(key===selectedDate?' selected':'')
+      +(dow===0?' sun':'')+(dow===6?' sat':'');
+    cell.onclick = () => selectDate(key);
+
+    const num = document.createElement('div');
+    num.className = 'day-num';
+    num.textContent = c.day;
+    cell.appendChild(num);
+
+    if (HOLIDAYS[key]) {
+      const h = document.createElement('div');
+      h.className = 'holiday-name';
+      h.textContent = HOLIDAYS[key];
+      cell.appendChild(h);
+    }
+
+    (events[key]||[]).slice(0,3).forEach(ev => {
+      const tag = document.createElement('div');
+      tag.className = 'event-tag '+(CAT_CLASS[ev.cat]||'cat-other');
+      tag.textContent = ev.title;
+      cell.appendChild(tag);
+    });
+    if ((events[key]||[]).length>3) {
+      const more = document.createElement('div');
+      more.style.cssText='font-size:9px;color:#999;padding:0 3px;';
+      more.textContent=`+${events[key].length-3}개`;
+      cell.appendChild(more);
+    }
+    grid.appendChild(cell);
+  });
+}
+
+function selectDate(key) {
+  selectedDate = key;
+  render();
+  renderEventList();
+  document.getElementById('selectedDateLabel').textContent = formatLabel(key);
+  document.getElementById('eventInput').focus();
+}
+
+function formatLabel(key) {
+  const [y,m,d] = key.split('-');
+  const dow = ['일','월','화','수','목','금','토'][new Date(+y,+m-1,+d).getDay()];
+  const h = HOLIDAYS[key] ? ` (${HOLIDAYS[key]})` : '';
+  return `${+y}년 ${+m}월 ${+d}일 (${dow})${h}`;
+}
+
+function renderEventList() {
+  const list = document.getElementById('eventList');
+  const evs = events[selectedDate]||[];
+  if(!evs.length){list.innerHTML='<div class="no-events">등록된 일정이 없습니다</div>';return;}
+  list.innerHTML='';
+  evs.forEach((ev,idx) => {
+    const item = document.createElement('div');
+    item.className='event-item';
+    item.innerHTML=`
+      <div class="event-dot" style="background:${CAT_COLOR[ev.cat]||'#888'}"></div>
+      <div style="flex:1">
+        <div class="event-item-text">[${CAT_NAME[ev.cat]||'기타'}] ${ev.title}</div>
+        ${ev.memo?`<div class="event-item-memo">${ev.memo}</div>`:''}
+      </div>
+      <button class="event-del-btn" onclick="deleteEvent(${idx})">✕</button>`;
+    list.appendChild(item);
+  });
+}
+
+function addEvent() {
+  const title = document.getElementById('eventInput').value.trim();
+  const cat = document.getElementById('catSelect').value;
+  const memo = document.getElementById('memoInput').value.trim();
+  if (!title||!selectedDate) return;
+  if (!events[selectedDate]) events[selectedDate]=[];
+  events[selectedDate].push({title,cat,memo});
+  saveData();
+  document.getElementById('eventInput').value='';
+  document.getElementById('memoInput').value='';
+  render(); renderEventList();
+}
+
+function deleteEvent(idx) {
+  if (!events[selectedDate]) return;
+  events[selectedDate].splice(idx,1);
+  if (!events[selectedDate].length) delete events[selectedDate];
+  saveData(); render(); renderEventList();
+}
+
+function connectGcal(silent) {
+  const url = document.getElementById('gcalUrl').value.trim();
+  if (!url) { if(!silent) alert('URL을 입력해주세요'); return; }
+  
+  let embedUrl = url;
+  // iframe 코드에서 src 추출
+  const srcMatch = url.match(/src=["']([^"']+)["']/);
+  if (srcMatch) embedUrl = srcMatch[1];
+  
+  if (!embedUrl.includes('calendar.google.com')) {
+    if(!silent) alert('올바른 Google Calendar URL을 입력해주세요\nhttps://calendar.google.com/calendar/embed?src=... 형식');
+    return;
+  }
+  
+  localStorage.setItem('jym_gcal_url', embedUrl);
+  const container = document.getElementById('gcalContainer');
+  container.innerHTML = `
+    <div class="gcal-iframe-wrap">
+      <iframe src="${embedUrl}&hl=ko" frameborder="0" scrolling="no" allowfullscreen></iframe>
+    </div>`;
+}
+
+// Service Worker 등록
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  });
+}
+
+init();
+</script>
+</body>
+</html>
