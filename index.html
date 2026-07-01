@@ -237,6 +237,19 @@ body {
 }
 .gcal-link-btn:hover { background:#f0f0f0; }
 
+/* 삼성SDI 자료 */
+.sdi-doc { padding-bottom:10px; margin-bottom:10px; border-bottom:1px solid #eee; }
+.sdi-doc:last-child { border-bottom:none; margin-bottom:0; padding-bottom:0; }
+.sdi-doc-title { font-size:12px; font-weight:800; color:#1a2b4a; margin-bottom:4px; }
+.sdi-doc-date { font-size:10px; color:#999; margin-bottom:4px; }
+.sdi-doc-summary { font-size:11px; color:#555; line-height:1.5; margin-bottom:6px; }
+.sdi-doc-link {
+  display:inline-block; font-size:11px; color:#1a2b4a;
+  text-decoration:none; border:1px solid #ddd; border-radius:6px;
+  padding:4px 8px; transition:background 0.2s;
+}
+.sdi-doc-link:hover { background:#f0f4ff; }
+
 /* 반응형 */
 @media (max-width: 768px) {
   .main { flex-direction:column; padding:10px; }
@@ -329,6 +342,23 @@ body {
           <a class="gcal-link-btn" href="https://calendar.google.com" target="_blank">
             🔗 Google Calendar 바로가기
           </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 삼성SDI 자료 -->
+    <div class="panel-card">
+      <div class="panel-header">🔋 삼성SDI 자료 (구글드라이브 "삼성sdi" 폴더)</div>
+      <div class="panel-body">
+        <div class="sdi-doc">
+          <div class="sdi-doc-title">회의록: 배터리 집전판용 구리 소재 광택도 품질 개선 협의</div>
+          <div class="sdi-doc-date">2026-03-19 · 이구산업 품질혁신본부 / SDI 및 협력사</div>
+          <div class="sdi-doc-summary">
+            배터리 집전판용 구리 소재의 광택도 편차(200~450)가 SDI 비전 검사기의 용접 길이 오인식(과검)을 유발.
+            4월 말까지 압연롤 연마 입도 최적화 및 광택도 관리 표준(Target 350±50)을 수립해 공정 안정성을 확보하는 것이 최우선 과제로 결정됨.
+            A/B면(용접면) 식별 관리 강화, 세정 공정(구연산 세정 시 광택 복원) 변수 점검도 병행.
+          </div>
+          <a class="sdi-doc-link" href="https://drive.google.com/file/d/1yHpyhzB96plPckGUyiI2apom7NC125dW/view" target="_blank">📄 원본 PDF 보기</a>
         </div>
       </div>
     </div>
